@@ -177,3 +177,74 @@
 [2026-05-07 00:29:15] [TRAILING-STOP] Price: $397.34 | Floor: $377.47
 [2026-05-07 00:29:18] [TRAILING-STOP] Price: $397.34 | Floor (5%): $377.47
 [2026-05-07 00:29:58] [TRAILING-STOP] Price: $397.34 | Floor: $377.47
+[2026-05-07 00:30:15] [TRAILING-STOP] Price: $397.43 | Floor: $377.56
+[2026-05-07 00:30:18] [TRAILING-STOP] Price: $397.43 | Floor (5%): $377.56
+[2026-05-07 00:30:57] [POLITICIAN-TRACKER] Scraping latest Capitol Trades data...
+[2026-05-07 00:30:58] [THE-WHEEL] Owned: 10 shares of TSLA. Strategy: Selling Covered Calls (Income).
+[2026-05-07 00:30:58] [THE-WHEEL] Optimal Strike for Friday: $417.31
+[2026-05-07 00:30:58] [POLITICIAN-TRACKER] NEW WHALE TRADE DETECTED: GS. Executing Market Buy (AUTO).
+[2026-05-07 00:30:58] [TRAILING-STOP] Price: $397.44 | Floor: $377.57
+[2026-05-07 00:30:59] [POLITICIAN-TRACKER] ORDER SUCCESS: Bought 1 share of GS.
+[2026-05-07 00:30:59] [POLITICIAN-TRACKER] ORDER FAILED: [Errno 13] Permission denied: 'last_whale_ticker.txt'
+[2026-05-07 00:31:15] [TRAILING-STOP] Price: $397.55 | Floor: $377.67
+[2026-05-07 00:31:18] [TRAILING-STOP] Price: $397.55 | Floor (5%): $377.67
+[2026-05-07 00:31:59] [TRAILING-STOP] Price: $397.55 | Floor: $377.67
+[2026-05-07 00:32:15] [TRAILING-STOP] Price: $397.55 | Floor: $377.67
+[2026-05-07 00:32:19] [TRAILING-STOP] Price: $397.55 | Floor (5%): $377.67
+[2026-05-07 00:32:59] [TRAILING-STOP] Price: $397.55 | Floor: $377.67
+[2026-05-07 00:33:15] [TRAILING-STOP] Price: $397.55 | Floor: $377.67
+[2026-05-07 00:33:19] [TRAILING-STOP] Price: $397.55 | Floor (5%): $377.67
+[2026-05-07 00:33:59] [TRAILING-STOP] Price: $397.5 | Floor: $377.62
+[2026-05-07 00:34:10] [POLITICIAN-TRACKER] Scanning whale flow for: NVDA, AAPL, MSFT, GOOGL
+[2026-05-07 00:34:10] [POLITICIAN-TRACKER] Scanning... No new whale trades detected.
+[2026-05-07 00:34:15] [THE-WHEEL] Owned: 10 shares of TSLA. Strategy: Selling Covered Calls (Income).
+[2026-05-07 00:34:15] [THE-WHEEL] Optimal Strike for Friday: $417.38
+[2026-05-07 00:34:15] [TRAILING-STOP] Price: $397.5 | Floor: $377.62
+[2026-05-07 00:34:19] [TRAILING-STOP] Price: $397.5 | Floor (5%): $377.62
+[2026-05-07 00:34:59] [TRAILING-STOP] Price: $397.6 | Floor: $377.72
+[2026-05-07 00:35:15] [TRAILING-STOP] Price: $397.6 | Floor: $377.72
+[2026-05-07 00:35:18] [POLITICIAN-TRACKER] Scanning Capitol Trades (Watch: NVDA, AAPL, MSFT, GOOGL)
+[2026-05-07 00:35:19] [THE-WHEEL] Owned: 10 shares of TSLA. Strategy: Selling Covered Calls (Income).
+[2026-05-07 00:35:19] [THE-WHEEL] Optimal Strike for Friday: $417.48
+[2026-05-07 00:35:19] [TRAILING-STOP] Price: $397.6 | Floor (5%): $377.72
+[2026-05-07 00:35:19] [POLITICIAN-TRACKER] AUTO-BUY: MSFT.
+[2026-05-07 00:35:20] [POLITICIAN-TRACKER] Order Failed: [Errno 13] Permission denied: 'last_whale_ticker.txt'
+[2026-05-07 00:35:59] [TRAILING-STOP] Price: $397.6 | Floor: $377.72
+[2026-05-07 00:36:15] [TRAILING-STOP] Price: $397.61 | Floor: $377.73
+[2026-05-07 00:36:19] [TRAILING-STOP] Price: $397.61 | Floor (5%): $377.73
+[2026-05-07 00:36:59] [TRAILING-STOP] Price: $397.61 | Floor: $377.73
+[2026-05-07 00:37:15] [TRAILING-STOP] Price: $397.61 | Floor: $377.73
+[2026-05-07 00:37:19] [TRAILING-STOP] Price: $397.61 | Floor (5%): $377.73
+[2026-05-07 00:37:59] [TRAILING-STOP] Price: $397.61 | Floor: $377.73
+[2026-05-07 00:38:16] [TRAILING-STOP] Price: $397.61 | Floor: $377.73
+[2026-05-07 00:38:19] [TRAILING-STOP] Price: $397.61 | Floor (5%): $377.73
+[2026-05-07 00:38:59] [TRAILING-STOP] Price: $397.61 | Floor: $377.73
+[2026-05-07 00:39:10] [POLITICIAN-TRACKER] Scanning whale flow for: NVDA, AAPL, MSFT, GOOGL
+[2026-05-07 00:39:10] [POLITICIAN-TRACKER] Scanning... No new whale trades detected.
+[2026-05-07 00:39:16] [TRAILING-STOP] Price: $397.61 | Floor: $377.73
+[2026-05-07 00:39:19] [TRAILING-STOP] Price: $397.61 | Floor (5%): $377.73
+[2026-05-07 00:39:59] [TRAILING-STOP] Price: $397.61 | Floor: $377.73
+[2026-05-07 00:40:16] [TRAILING-STOP] Price: $397.61 | Floor: $377.73
+[2026-05-07 00:40:19] [TRAILING-STOP] Price: $397.61 | Floor (5%): $377.73
+[2026-05-07 00:40:58] [THE-WHEEL] Owned: 10 shares of TSLA. Strategy: Selling Covered Calls (Income).
+[2026-05-07 00:40:58] [THE-WHEEL] Optimal Strike for Friday: $417.49
+[2026-05-07 00:40:59] [TRAILING-STOP] Price: $397.61 | Floor: $377.73
+[2026-05-07 00:41:16] [TRAILING-STOP] Price: $397.61 | Floor: $377.73
+[2026-05-07 00:41:19] [TRAILING-STOP] Price: $397.61 | Floor (5%): $377.73
+[2026-05-07 00:42:00] [TRAILING-STOP] Price: $397.9 | Floor: $378.00
+[2026-05-07 00:42:16] [TRAILING-STOP] Price: $397.9 | Floor: $378.00
+[2026-05-07 00:42:20] [TRAILING-STOP] Price: $397.9 | Floor (5%): $378.00
+[2026-05-07 00:43:00] [TRAILING-STOP] Price: $397.9 | Floor: $378.00
+[2026-05-07 00:43:16] [TRAILING-STOP] Price: $397.9 | Floor: $378.00
+[2026-05-07 00:43:20] [TRAILING-STOP] Price: $397.9 | Floor (5%): $378.00
+[2026-05-07 00:43:59] [POLITICIAN-TRACKER] Scraping latest Capitol Trades data...
+[2026-05-07 00:44:00] [TRAILING-STOP] Price: $398.05 | Floor: $378.15
+[2026-05-07 00:44:00] [POLITICIAN-TRACKER] NEW WHALE TRADE DETECTED: BXSL. Executing Market Buy.
+[2026-05-07 00:44:01] [POLITICIAN-TRACKER] ORDER SUCCESS: Bought 1 share of BXSL.
+[2026-05-07 00:44:01] [POLITICIAN-TRACKER] ORDER FAILED for BXSL: [Errno 13] Permission denied: 'last_whale_ticker.txt'
+[2026-05-07 00:44:10] [POLITICIAN-TRACKER] Scanning whale flow for: NVDA, AAPL, MSFT, GOOGL
+[2026-05-07 00:44:10] [POLITICIAN-TRACKER] Scanning... No new whale trades detected.
+[2026-05-07 00:44:15] [THE-WHEEL] Owned: 10 shares of TSLA. Strategy: Selling Covered Calls (Income).
+[2026-05-07 00:44:15] [THE-WHEEL] Optimal Strike for Friday: $417.86
+[2026-05-07 00:44:16] [TRAILING-STOP] Price: $397.96 | Floor: $378.06
+[2026-05-07 00:44:20] [TRAILING-STOP] Price: $397.96 | Floor (5%): $378.06

@@ -23,3 +23,6 @@
 [2026-05-06 23:54:12] [THE-WHEEL] Owned: 10 shares of TSLA. Strategy: Selling Covered Calls (Income).
 [2026-05-06 23:54:12] [THE-WHEEL] Optimal Strike for Friday: $418.03
 [2026-05-06 23:55:12] [TRAILING-STOP] Price: $398.1 | Floor: $378.19
+[2026-05-06 23:56:12] [TRAILING-STOP] Price: $398.1 | Floor: $378.19
+[2026-05-06 23:57:12] [TRAILING-STOP] Price: $398.1 | Floor: $378.19
+[2026-05-06 23:58:12] [TRAILING-STOP] Price: $398.1 | Floor: $378.19

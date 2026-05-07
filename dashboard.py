@@ -13,11 +13,19 @@ if "ALPACA_API_KEY" in st.secrets:
     BASE_URL = st.secrets.get("ALPACA_BASE_URL", "https://paper-api.alpaca.markets")
     GEMINI_API_KEY = st.secrets.get("GEMINI_API_KEY", None)
 else:
-    # Local fallback for your computer
-    API_KEY = "PKRPLQBGC5J3ALAUJ2CEXRF5WS"
-    SECRET_KEY = "5nWMXqwxJyyknuaVsLEsiDdLKB9ue9HNz2cnLL5j11Qo"
-    BASE_URL = "https://paper-api.alpaca.markets"
-    GEMINI_API_KEY = None
+    # Local fallback for your computer (using the hidden secrets file if it exists)
+    try:
+        # Streamlit reads from .streamlit/secrets.toml automatically if running via 'streamlit run'
+        # But we'll try to explicitly grab them for safety in some environments
+        API_KEY = st.secrets.get("ALPACA_API_KEY", "PKRPLQBGC5J3ALAUJ2CEXRF5WS")
+        SECRET_KEY = st.secrets.get("ALPACA_SECRET_KEY", "5nWMXqwxJyyknuaVsLEsiDdLKB9ue9HNz2cnLL5j11Qo")
+        BASE_URL = st.secrets.get("ALPACA_BASE_URL", "https://paper-api.alpaca.markets")
+        GEMINI_API_KEY = st.secrets.get("GEMINI_API_KEY", None)
+    except:
+        API_KEY = "PKRPLQBGC5J3ALAUJ2CEXRF5WS"
+        SECRET_KEY = "5nWMXqwxJyyknuaVsLEsiDdLKB9ue9HNz2cnLL5j11Qo"
+        BASE_URL = "https://paper-api.alpaca.markets"
+        GEMINI_API_KEY = None
 
 api = REST(API_KEY, SECRET_KEY, BASE_URL)
 SETTINGS_FILE = "settings.json"
@@ -40,6 +48,9 @@ def get_ai_advice(params):
     if 'limit_price' in params: details.append(f"at ${params['limit_price']}")
     if 'stop_price' in params: details.append(f"triggered at ${params['stop_price']}")
     if 'trail_percent' in params: details.append(f"trailing by {params['trail_percent']}%")
+    if params.get('order_class') == 'bracket':
+        details.append(f"with Profit Goal at ${params['take_profit']['limit_price']} and Emergency Stop at ${params['stop_loss']['stop_price']}")
+    
     detail_str = " ".join(details)
 
     advice = f"### 🛡️ Risk Analyst Report: {order_type} {side}\n\n"
@@ -56,6 +67,8 @@ def get_ai_advice(params):
         advice += "**Risk**: High precision. If the stock skips over your narrow window, the trade won't fill.\n**Benefit**: Prevents the 'slippage' risk of a normal stop order."
     elif params['type'] == "trailing_stop":
         advice += "**Risk**: A temporary 'dip' might trigger a sell even if the stock is still in a long-term uptrend.\n**Benefit**: It locks in profits as the stock climbs without you having to watch it."
+    elif params.get('order_class') == 'bracket':
+        advice += "**Risk**: Requires the price to hit one of your targets. Your money is 'locked' in this strategy until it finishes.\n**Benefit**: The Ultimate 'Set and Forget'. It automates your exit plan—both for making money (Profit) and protecting against loss (Stop) simultaneously."
 
     if GEMINI_API_KEY:
         try:
@@ -100,7 +113,8 @@ try:
     col2.metric("Portfolio Value", f"${float(account.portfolio_value):,.2f}")
     col3.metric("Daily P/L", f"${float(account.equity) - float(account.last_equity):,.2f}")
 except:
-    st.error("Account Connection Offline. Check Secrets.")
+    st.error("Account Connection Offline. Did you add your Secrets to Streamlit Cloud Settings?")
+    st.info("💡 Go to Settings -> Secrets and paste the API keys provided by Desktop Commander.")
 
 st.markdown("---")
 
@@ -113,19 +127,30 @@ if not st.session_state.order_review_mode:
         t_symbol = r1c1.text_input("Ticker Symbol", value="TSLA", help="e.g., TSLA, NVDA").upper()
         t_qty = r1c2.number_input("Shares", min_value=1, value=1)
         t_side = r1c3.selectbox("Action", ["buy", "sell"], help="Buy to enter, Sell to exit.")
-        t_type = r1c4.selectbox("Order Type", ["market", "limit", "stop", "stop_limit", "trailing_stop"],
-                                help="Market = Now. Limit = Fixed Price. Stop = Trigger. Stop-Limit = Trigger to Fixed Price. Trailing = Follows the price.")
+        t_type = r1c4.selectbox("Order Type", ["market", "limit", "stop", "stop_limit", "trailing_stop", "bracket"],
+                                help="Market = Now. Limit = Fixed Price. Stop = Trigger. Stop-Limit = Trigger to Fixed Price. Trailing = Follows the price. Bracket = Auto Profit + Auto Stop.")
 
-        r2c1, r2c2, r2c3 = st.columns(3)
-        t_limit = r2c1.number_input("Limit Price ($)", min_value=0.01, step=0.01) if t_type in ["limit", "stop_limit"] else None
+        r2c1, r2c2, r2c3, r2c4 = st.columns(4)
+        t_limit = r2c1.number_input("Limit Price ($)", min_value=0.01, step=0.01) if t_type in ["limit", "stop_limit", "bracket"] else None
         t_stop = r2c2.number_input("Stop/Trigger Price ($)", min_value=0.01, step=0.01) if t_type in ["stop", "stop_limit"] else None
         t_trail = r2c3.number_input("Trailing Percent (%)", min_value=0.1, max_value=25.0, value=5.0, step=0.1) if t_type == "trailing_stop" else None
+        
+        # Bracket specific inputs
+        t_tp = None
+        t_sl = None
+        if t_type == "bracket":
+            t_tp = r2c3.number_input("Take Profit Price ($)", min_value=0.01, step=0.01, help="If price hits this, sell for a win.")
+            t_sl = r2c4.number_input("Stop Loss Price ($)", min_value=0.01, step=0.01, help="If price hits this, sell to prevent further loss.")
 
         if st.form_submit_button("🛡️ Review Order with AI Advisor"):
-            params = {"symbol": t_symbol, "qty": t_qty, "side": t_side, "type": t_type}
+            params = {"symbol": t_symbol, "qty": t_qty, "side": t_side, "type": t_type if t_type != "bracket" else "limit"}
             if t_limit: params["limit_price"] = t_limit
             if t_stop: params["stop_price"] = t_stop
             if t_trail: params["trail_percent"] = t_trail
+            if t_type == "bracket":
+                params["order_class"] = "bracket"
+                params["take_profit"] = {"limit_price": t_tp}
+                params["stop_loss"] = {"stop_price": t_sl}
             
             st.session_state.pending_order_params = params
             st.session_state.order_review_mode = True

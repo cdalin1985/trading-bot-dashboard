@@ -1,0 +1,12 @@
+[2026-05-06 23:44:10] [TRAILING-STOP] Bot started. Monitoring TSLA.
+[2026-05-06 23:44:10] [POLITICIAN-TRACKER] Whale/Politician Tracker initialized.
+[2026-05-06 23:44:10] [POLITICIAN-TRACKER] Scanning whale flow for: NVDA, AAPL, MSFT, GOOGL
+[2026-05-06 23:44:10] [POLITICIAN-TRACKER] Scanning... No new whale trades detected.
+[2026-05-06 23:44:11] [THE-WHEEL] Wheel strategy active. Scanning for premiums...
+[2026-05-06 23:44:11] [TRAILING-STOP] Price: $398.14 | Floor: $378.23
+[2026-05-06 23:44:11] [THE-WHEEL] Owned: 10 shares of TSLA. Strategy: Selling Covered Calls (Income).
+[2026-05-06 23:44:11] [THE-WHEEL] Optimal Strike for Friday: $418.05
+[2026-05-06 23:45:11] [TRAILING-STOP] Price: $398.18 | Floor: $378.27
+[2026-05-06 23:46:11] [TRAILING-STOP] Price: $398.19 | Floor: $378.28
+[2026-05-06 23:47:11] [TRAILING-STOP] Price: $398.19 | Floor: $378.28
+[2026-05-06 23:48:11] [TRAILING-STOP] Price: $398.16 | Floor: $378.25

@@ -3,10 +3,10 @@ import time
 from datetime import datetime
 from alpaca_trade_api.rest import REST
 
-# Configuration
-API_KEY = os.environ.get("ALPACA_API_KEY", "PKRPLQBGC5J3ALAUJ2CEXRF5WS")
-SECRET_KEY = os.environ.get("ALPACA_SECRET_KEY", "5nWMXqwxJyyknuaVsLEsiDdLKB9ue9HNz2cnLL5j11Qo")
-BASE_URL = os.environ.get("ALPACA_BASE_URL", "https://paper-api.alpaca.markets")
+# CONFIGURATION
+API_KEY = "PKRPLQBGC5J3ALAUJ2CEXRF5WS"
+SECRET_KEY = "5nWMXqwxJyyknuaVsLEsiDdLKB9ue9HNz2cnLL5j11Qo"
+BASE_URL = "https://paper-api.alpaca.markets"
 
 api = REST(API_KEY, SECRET_KEY, BASE_URL)
 SYMBOL = "TSLA"
@@ -14,32 +14,39 @@ SYMBOL = "TSLA"
 def log_message(message):
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     log_entry = f"[{timestamp}] [THE-WHEEL] {message}\n"
-    log_file = "bot_log.txt"
-    try:
-        with open(log_file, "a") as f:
-            f.write(log_entry)
-    except:
-        pass
+    log_file = r"C:\Users\chase\Documents\trading-bot\bot_log.txt"
+    for _ in range(5):
+        try:
+            with open(log_file, "a") as f:
+                f.write(log_entry)
+            break
+        except PermissionError:
+            time.sleep(1)
     print(log_entry.strip())
 
 def run_wheel_logic():
     try:
+        # Check if we own the stock
         position = api.get_position(SYMBOL)
         qty = int(position.qty)
-        log_message(f"Owned: {qty} shares of {SYMBOL}.")
+        log_message(f"Owned: {qty} shares of {SYMBOL}. Strategy: Selling Covered Calls (Income).")
+        
+        # Calculate a conservative Strike Price (5% above current)
         target_strike = float(position.current_price) * 1.05
-        log_message(f"Optimal Strike: ${target_strike:.2f}")
+        log_message(f"Optimal Strike for Friday: ${target_strike:.2f}")
+        
     except Exception as e:
         if "position does not exist" in str(e):
-            log_message(f"No {SYMBOL} shares held. Targeting entry.")
+            log_message(f"No {SYMBOL} shares held. Strategy: Selling Cash-Secured Puts (Entry).")
+            # Get latest price to find entry point
             last_quote = api.get_latest_quote(SYMBOL)
             entry_price = float(last_quote.ask) * 0.97
-            log_message(f"Target Entry: ${entry_price:.2f}")
+            log_message(f"Target Entry (Sell Put): ${entry_price:.2f}")
         else:
             log_message(f"Error: {e}")
 
 if __name__ == "__main__":
-    log_message("Wheel strategy active.")
+    log_message("Wheel strategy active. Scanning for premiums...")
     while True:
         run_wheel_logic()
-        time.sleep(600)
+        time.sleep(600) # Check every 10 minutes

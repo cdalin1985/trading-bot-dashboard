@@ -1,0 +1,7 @@
+.streamlit/secrets.toml
+__pycache__/
+*.pyc
+bot_log.txt
+last_whale_ticker.txt
+pending_trades.json
+settings.json

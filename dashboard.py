@@ -13,6 +13,7 @@ if "ALPACA_API_KEY" in st.secrets:
     BASE_URL = st.secrets.get("ALPACA_BASE_URL", "https://paper-api.alpaca.markets")
     GEMINI_API_KEY = st.secrets.get("GEMINI_API_KEY", None)
 else:
+    # Local fallback for your computer
     API_KEY = st.secrets.get("ALPACA_API_KEY", "PKRPLQBGC5J3ALAUJ2CEXRF5WS")
     SECRET_KEY = st.secrets.get("ALPACA_SECRET_KEY", "5nWMXqwxJyyknuaVsLEsiDdLKB9ue9HNz2cnLL5j11Qo")
     BASE_URL = st.secrets.get("ALPACA_BASE_URL", "https://paper-api.alpaca.markets")
@@ -45,7 +46,7 @@ def get_ai_advice(params):
         sl = params['stop_loss']['stop_price']
         details.append(f"with Profit Goal at **${tp}** and Emergency Stop at **${sl}**")
         
-        # Immediate logic check to help the user
+        # Immediate logic check
         if side == "BUY" and float(tp) <= float(sl):
             return "❌ **ERROR**: For a BUY order, your 'Profit Goal' must be HIGHER than your 'Stop Loss'. Please adjust the numbers below."
         if side == "SELL" and float(tp) >= float(sl):
@@ -81,7 +82,7 @@ st.markdown("---")
 
 # --- SIDEBAR & TOP METRICS ---
 if not os.path.exists(SETTINGS_FILE):
-    with open(SETTINGS_FILE, "w") as f: json.dump({"mode": "Full Auto", "trailing_stop_pct": 5.0, "wheel_symbol": "TSLA"}, f)
+    with open(SETTINGS_FILE, "w") as f: json.dump({"mode": "Full Auto", "trailing_stop_pct": 5.0, "whale_symbols": "NVDA,AAPL", "wheel_symbol": "TSLA"}, f)
 
 with open(SETTINGS_FILE, "r") as f: settings = json.load(f)
 
@@ -102,6 +103,36 @@ try:
 except: st.error("Account Offline.")
 
 st.markdown("---")
+
+# --- POSITION & ORDER MONITORING ---
+st.header("📊 Mission Status")
+col_pos, col_trade = st.columns([2, 1])
+
+with col_pos:
+    st.subheader("Active Positions (Bot & Manual)")
+    positions = api.list_positions()
+    if positions:
+        st.dataframe(pd.DataFrame([[p.symbol, p.qty, p.current_price, f"{float(p.unrealized_pl):.2f}"] for p in positions], 
+                                 columns=['Symbol', 'Qty', 'Price', 'P/L']), use_container_width=True)
+    else: st.info("No active trades.")
+
+with col_trade:
+    st.subheader("💡 Bot Suggestions")
+    if os.path.exists(PENDING_TRADES_FILE):
+        with open(PENDING_TRADES_FILE, "r") as f: pending = json.load(f)
+        for i, t in enumerate(pending):
+            with st.expander(f"{t['bot']}: {t['side']} {t['symbol']}"):
+                if st.button("Approve", key=f"a_{i}"):
+                    api.submit_order(symbol=t['symbol'], qty=t['qty'], side=t['side'], type='market', time_in_force='gtc')
+                    pending.pop(i)
+                    with open(PENDING_TRADES_FILE, "w") as f: json.dump(pending, f)
+                    st.rerun()
+                if st.button("Reject", key=f"r_{i}"):
+                    pending.pop(i)
+                    with open(PENDING_TRADES_FILE, "w") as f: json.dump(pending, f)
+                    st.rerun()
+        else: st.write("None.")
+    else: st.write("None.")
 
 # --- MANUAL ORDER SECTION ---
 st.header("🕹️ Pro Manual Terminal")
@@ -164,7 +195,7 @@ else:
 
     btn_col1, btn_col2 = st.columns(2)
     
-    # Validation for the 'Execute' button
+    # Validation
     can_execute = True
     if params.get('order_class') == 'bracket':
         if params['side'] == 'buy' and params['take_profit']['limit_price'] <= params['stop_loss']['stop_price']:
@@ -179,25 +210,6 @@ else:
         except Exception as e:
             st.error(f"Execution Error: {e}")
             
-    if btn_col2.button("⬅️ Cancel / Clear All", use_container_width=True):
+    if btn_col2.button("⬅️ Cancel / Go Back", use_container_width=True):
         st.session_state.order_review_mode = False
         st.rerun()
-
-st.markdown("---")
-# --- PORTFOLIO & LOGS ---
-col_pos, col_log = st.columns([2, 1])
-with col_pos:
-    st.subheader("📊 Active Positions")
-    positions = api.list_positions()
-    if positions:
-        st.dataframe(pd.DataFrame([[p.symbol, p.qty, p.current_price, f"{float(p.unrealized_pl):.2f}"] for p in positions], 
-                                 columns=['Symbol', 'Qty', 'Price', 'P/L']), use_container_width=True)
-    else: st.info("No active trades.")
-
-with col_log:
-    st.subheader("🤖 Bot Activity")
-    tag_map = {"Trailing Stop Bot v1": "[TRAILING-STOP]", "Politician Tracker": "[POLITICIAN-TRACKER]", "The Wheel (Income)": "[THE-WHEEL]"}
-    if os.path.exists(LOG_FILE):
-        with open(LOG_FILE, "r") as f:
-            bot_lines = [l.strip() for l in f.readlines() if tag_map[active_bot] in l][-5:]
-            if bot_lines: st.code("\n".join(bot_lines[::-1]))

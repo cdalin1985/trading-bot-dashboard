@@ -16,3 +16,10 @@
 [2026-05-06 23:50:11] [TRAILING-STOP] Price: $398.11 | Floor: $378.20
 [2026-05-06 23:51:12] [TRAILING-STOP] Price: $398.11 | Floor: $378.20
 [2026-05-06 23:52:12] [TRAILING-STOP] Price: $398.13 | Floor: $378.22
+[2026-05-06 23:53:12] [TRAILING-STOP] Price: $398.13 | Floor: $378.22
+[2026-05-06 23:54:10] [POLITICIAN-TRACKER] Scanning whale flow for: NVDA, AAPL, MSFT, GOOGL
+[2026-05-06 23:54:10] [POLITICIAN-TRACKER] Scanning... No new whale trades detected.
+[2026-05-06 23:54:12] [TRAILING-STOP] Price: $398.12 | Floor: $378.21
+[2026-05-06 23:54:12] [THE-WHEEL] Owned: 10 shares of TSLA. Strategy: Selling Covered Calls (Income).
+[2026-05-06 23:54:12] [THE-WHEEL] Optimal Strike for Friday: $418.03
+[2026-05-06 23:55:12] [TRAILING-STOP] Price: $398.1 | Floor: $378.19

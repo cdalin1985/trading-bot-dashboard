@@ -39,7 +39,19 @@ if __name__ == "__main__":
     while True:
         hit = scan_congressional_trades()
         if hit:
-            log_message(f"ALERT: Unusual volume detected in {hit}. Potential insider/whale trade.")
+            log_message(f"ALERT: Unusual volume detected in {hit}. Executing Market Buy.")
+            try:
+                # Place a market buy order for 1 share
+                api.submit_order(
+                    symbol=hit,
+                    qty=1,
+                    side='buy',
+                    type='market',
+                    time_in_force='gtc'
+                )
+                log_message(f"ORDER SENT: Bought 1 share of {hit}.")
+            except Exception as e:
+                log_message(f"ORDER FAILED: {e}")
         else:
             log_message("Scanning... No new whale trades detected.")
         time.sleep(300) # Scan every 5 minutes

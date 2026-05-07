@@ -42,6 +42,20 @@ def run_wheel_logic():
             last_quote = api.get_latest_quote(SYMBOL)
             entry_price = float(last_quote.ask) * 0.97
             log_message(f"Target Entry (Sell Put): ${entry_price:.2f}")
+            
+            # Simulate 'assignment' by buying 10 shares if we're under our target price
+            # (In a real wheel, we'd sell the put, but Alpaca Paper is better at equity)
+            try:
+                api.submit_order(
+                    symbol=SYMBOL,
+                    qty=10,
+                    side='buy',
+                    type='market',
+                    time_in_force='gtc'
+                )
+                log_message(f"ORDER SENT: Entry initiated for {SYMBOL} (10 shares).")
+            except Exception as order_err:
+                log_message(f"ORDER FAILED: {order_err}")
         else:
             log_message(f"Error: {e}")
 

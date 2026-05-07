@@ -47,7 +47,8 @@ st.markdown("---")
 settings = load_settings()
 st.sidebar.header("Bot Fleet Management")
 automation_mode = st.sidebar.radio("Bot Authority", ["Full Auto", "Manual Approval Required"], 
-                                   index=0 if settings["mode"] == "Full Auto" else 1)
+                                   index=0 if settings["mode"] == "Full Auto" else 1,
+                                   help="Full Auto: Bots trade immediately. Manual: Bots wait for your 'Approve' click.")
 
 # Update mode if changed
 if automation_mode != settings["mode"]:
@@ -71,41 +72,30 @@ st.subheader(f"🤖 Bot Insight: {active_bot}")
 insight_col, settings_col = st.columns([2, 1])
 
 with insight_col:
-    # Get logs for specific bot
-    tag_map = {
-        "Trailing Stop Bot v1": "[TRAILING-STOP]",
-        "Politician Tracker": "[POLITICIAN-TRACKER]",
-        "The Wheel (Income)": "[THE-WHEEL]"
-    }
+    tag_map = {"Trailing Stop Bot v1": "[TRAILING-STOP]", "Politician Tracker": "[POLITICIAN-TRACKER]", "The Wheel (Income)": "[THE-WHEEL]"}
     selected_tag = tag_map[active_bot]
-    
     if os.path.exists(LOG_FILE):
         with open(LOG_FILE, "r") as f:
             lines = f.readlines()
             bot_lines = [l.strip() for l in lines if selected_tag in l][-10:]
-            if bot_lines:
-                st.code("\n".join(bot_lines[::-1]), language="text")
-            else:
-                st.info("No recent log entries for this bot.")
-    else:
-        st.info("Log file not found.")
+            if bot_lines: st.code("\n".join(bot_lines[::-1]), language="text")
+            else: st.info("No recent activity.")
+    else: st.info("Logs initializing...")
 
 with settings_col:
     st.write("**Local Settings**")
     if active_bot == "Trailing Stop Bot v1":
-        new_val = st.slider("Trailing Stop %", 1.0, 20.0, float(settings.get("trailing_stop_pct", 5.0)))
+        new_val = st.slider("Trailing Stop %", 1.0, 20.0, float(settings.get("trailing_stop_pct", 5.0)), help="The 'floor' that follows the price up.")
         if new_val != settings.get("trailing_stop_pct"):
             settings["trailing_stop_pct"] = new_val
             save_settings(settings)
             st.success("Updated!")
-            
     elif active_bot == "Politician Tracker":
-        new_val = st.text_input("Whale Symbols", settings.get("whale_symbols", "NVDA,AAPL"))
+        new_val = st.text_input("Whale Symbols", settings.get("whale_symbols", "NVDA,AAPL"), help="Comma-separated symbols to watch.")
         if new_val != settings.get("whale_symbols"):
             settings["whale_symbols"] = new_val
             save_settings(settings)
             st.success("Updated!")
-            
     elif active_bot == "The Wheel (Income)":
         new_val = st.text_input("Target Ticker", settings.get("wheel_symbol", "TSLA"))
         if new_val != settings.get("wheel_symbol"):
@@ -124,8 +114,7 @@ with col_pos:
         pos_data = [[p.symbol, p.qty, p.current_price, f"{float(p.unrealized_pl):.2f}"] for p in positions]
         df = pd.DataFrame(pos_data, columns=['Symbol', 'Qty', 'Price', 'Unrealized P/L'])
         st.dataframe(df, use_container_width=True)
-    else:
-        st.info("No active positions.")
+    else: st.info("No active positions.")
 
 with col_trade:
     st.subheader("💡 Bot Suggestions")
@@ -139,23 +128,51 @@ with col_trade:
                     if st.button("Approve", key=f"app_{i}"):
                         api.submit_order(symbol=trade['symbol'], qty=trade['qty'], side=trade['side'], type='market', time_in_force='gtc')
                         pending.pop(i)
-                        with open(PENDING_TRADES_FILE, "w") as f:
-                            json.dump(pending, f)
+                        with open(PENDING_TRADES_FILE, "w") as f: json.dump(pending, f)
                         st.rerun()
                     if st.button("Reject", key=f"rej_{i}"):
                         pending.pop(i)
-                        with open(PENDING_TRADES_FILE, "w") as f:
-                            json.dump(pending, f)
+                        with open(PENDING_TRADES_FILE, "w") as f: json.dump(pending, f)
                         st.rerun()
         else: st.write("None.")
     else: st.write("None.")
 
-st.subheader("🕹️ Manual Order")
-with st.form("manual_trade_form"):
-    c1, c2, c3 = st.columns(3)
-    t_symbol = c1.text_input("Symbol", value="TSLA").upper()
-    t_qty = c2.number_input("Qty", min_value=1, value=1)
-    t_side = c3.selectbox("Action", ["buy", "sell"])
-    if st.form_submit_button("Execute Manual Trade"):
-        api.submit_order(symbol=t_symbol, qty=t_qty, side=t_side, type='market', time_in_force='gtc')
-        st.success(f"Sent: {t_side.upper()} {t_qty} {t_symbol}")
+# --- ENHANCED MANUAL ORDERING ---
+st.subheader("🕹️ Advanced Manual Order")
+with st.form("advanced_manual_trade"):
+    row1_c1, row1_c2, row1_c3, row1_c4 = st.columns(4)
+    t_symbol = row1_c1.text_input("Symbol", value="TSLA", help="Ticker symbol (e.g., TSLA, NVDA)").upper()
+    t_qty = row1_c2.number_input("Quantity", min_value=1, value=1, help="Number of shares to buy or sell")
+    t_side = row1_c3.selectbox("Action", ["buy", "sell"], help="Buy to open a position, Sell to close it")
+    t_type = row1_c4.selectbox("Order Type", ["market", "limit", "stop", "trailing_stop"], 
+                                help="Market: Buy/Sell now. Limit: Buy low/Sell high. Stop: Trigger at a price. Trailing Stop: Floor that follows the price up.")
+
+    row2_c1, row2_c2, row2_c3 = st.columns(3)
+    t_limit_price = None
+    t_stop_price = None
+    t_trail_percent = None
+
+    if t_type == "limit":
+        t_limit_price = row2_c1.number_input("Limit Price ($)", min_value=0.01, step=0.01, help="The MAXIMUM price you are willing to pay, or MINIMUM you will sell for.")
+    elif t_type == "stop":
+        t_stop_price = row2_c1.number_input("Trigger Price ($)", min_value=0.01, step=0.01, help="When the stock hits this price, your order becomes active.")
+    elif t_type == "trailing_stop":
+        t_trail_percent = row2_c1.number_input("Trail Percent (%)", min_value=0.1, max_value=20.0, value=5.0, step=0.1, help="The distance the stop follows the price. If it drops this much from the high, it sells.")
+
+    if st.form_submit_button("🔥 Execute Advanced Order"):
+        try:
+            order_params = {
+                "symbol": t_symbol,
+                "qty": t_qty,
+                "side": t_side,
+                "type": t_type,
+                "time_in_force": 'gtc'
+            }
+            if t_type == "limit": order_params["limit_price"] = t_limit_price
+            if t_type == "stop": order_params["stop_price"] = t_stop_price
+            if t_type == "trailing_stop": order_params["trail_percent"] = t_trail_percent
+            
+            api.submit_order(**order_params)
+            st.success(f"Successfully placed {t_type.upper()} {t_side.upper()} order for {t_qty} {t_symbol}")
+        except Exception as e:
+            st.error(f"Order failed: {e}")

@@ -26,3 +26,12 @@
 [2026-05-06 23:56:12] [TRAILING-STOP] Price: $398.1 | Floor: $378.19
 [2026-05-06 23:57:12] [TRAILING-STOP] Price: $398.1 | Floor: $378.19
 [2026-05-06 23:58:12] [TRAILING-STOP] Price: $398.1 | Floor: $378.19
+[2026-05-06 23:58:55] [POLITICIAN-TRACKER] Whale/Politician Tracker ONLINE. Monitoring Capitol Trades.
+[2026-05-06 23:58:55] [POLITICIAN-TRACKER] Scraping latest Capitol Trades data...
+[2026-05-06 23:58:56] [POLITICIAN-TRACKER] NEW WHALE TRADE DETECTED: GS. Executing Market Buy.
+[2026-05-06 23:58:57] [POLITICIAN-TRACKER] ORDER SUCCESS: Bought 1 share of GS.
+[2026-05-06 23:58:57] [POLITICIAN-TRACKER] ORDER FAILED for GS: [Errno 13] Permission denied: 'last_whale_ticker.txt'
+[2026-05-06 23:59:10] [POLITICIAN-TRACKER] Scanning whale flow for: NVDA, AAPL, MSFT, GOOGL
+[2026-05-06 23:59:10] [POLITICIAN-TRACKER] Scanning... No new whale trades detected.
+[2026-05-06 23:59:12] [TRAILING-STOP] Price: $398.14 | Floor: $378.23
+[2026-05-07 00:00:12] [TRAILING-STOP] Price: $398.19 | Floor: $378.28

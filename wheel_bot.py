@@ -1,5 +1,6 @@
 import os
 import time
+import json
 from datetime import datetime
 from alpaca_trade_api.rest import REST
 
@@ -10,6 +11,8 @@ BASE_URL = "https://paper-api.alpaca.markets"
 
 api = REST(API_KEY, SECRET_KEY, BASE_URL)
 SYMBOL = "TSLA"
+SETTINGS_FILE = "settings.json"
+PENDING_TRADES_FILE = "pending_trades.json"
 
 def log_message(message):
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -23,6 +26,38 @@ def log_message(message):
         except PermissionError:
             time.sleep(1)
     print(log_entry.strip())
+
+def get_automation_mode():
+    if os.path.exists(SETTINGS_FILE):
+        try:
+            with open(SETTINGS_FILE, "r") as f:
+                return json.load(f).get("mode", "Full Auto")
+        except:
+            return "Full Auto"
+    return "Full Auto"
+
+def queue_trade(bot_name, symbol, qty, side, reason):
+    pending = []
+    if os.path.exists(PENDING_TRADES_FILE):
+        try:
+            with open(PENDING_TRADES_FILE, "r") as f:
+                pending = json.load(f)
+        except:
+            pass
+    
+    if any(t['symbol'] == symbol and t['bot'] == bot_name for t in pending):
+        return
+
+    pending.append({
+        "bot": bot_name,
+        "symbol": symbol,
+        "qty": qty,
+        "side": side,
+        "reason": reason,
+        "timestamp": datetime.now().isoformat()
+    })
+    with open(PENDING_TRADES_FILE, "w") as f:
+        json.dump(pending, f)
 
 def run_wheel_logic():
     try:
@@ -43,19 +78,16 @@ def run_wheel_logic():
             entry_price = float(last_quote.ask) * 0.97
             log_message(f"Target Entry (Sell Put): ${entry_price:.2f}")
             
-            # Simulate 'assignment' by buying 10 shares if we're under our target price
-            # (In a real wheel, we'd sell the put, but Alpaca Paper is better at equity)
-            try:
-                api.submit_order(
-                    symbol=SYMBOL,
-                    qty=10,
-                    side='buy',
-                    type='market',
-                    time_in_force='gtc'
-                )
-                log_message(f"ORDER SENT: Entry initiated for {SYMBOL} (10 shares).")
-            except Exception as order_err:
-                log_message(f"ORDER FAILED: {order_err}")
+            mode = get_automation_mode()
+            if mode == "Full Auto":
+                try:
+                    api.submit_order(symbol=SYMBOL, qty=10, side='buy', type='market', time_in_force='gtc')
+                    log_message(f"ORDER SENT: Entry initiated for {SYMBOL} (10 shares).")
+                except Exception as order_err:
+                    log_message(f"ORDER FAILED: {order_err}")
+            else:
+                log_message(f"STRATEGY TRIGGER: Entry for {SYMBOL}. Queuing for Manual Approval.")
+                queue_trade("The Wheel", SYMBOL, 10, "buy", f"Entry logic: No position in {SYMBOL}")
         else:
             log_message(f"Error: {e}")
 

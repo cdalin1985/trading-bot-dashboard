@@ -2,6 +2,7 @@ import os
 import time
 import requests
 import re
+import json
 from datetime import datetime
 from alpaca_trade_api.rest import REST
 
@@ -65,6 +66,42 @@ def set_last_ticker(ticker):
     with open(LAST_TICKER_FILE, "w") as f:
         f.write(ticker)
 
+SETTINGS_FILE = "settings.json"
+PENDING_TRADES_FILE = "pending_trades.json"
+
+def get_automation_mode():
+    if os.path.exists(SETTINGS_FILE):
+        try:
+            with open(SETTINGS_FILE, "r") as f:
+                return json.load(f).get("mode", "Full Auto")
+        except:
+            return "Full Auto"
+    return "Full Auto"
+
+def queue_trade(bot_name, symbol, qty, side, reason):
+    pending = []
+    if os.path.exists(PENDING_TRADES_FILE):
+        try:
+            with open(PENDING_TRADES_FILE, "r") as f:
+                pending = json.load(f)
+        except:
+            pass
+    
+    # Check if this exact trade is already queued to avoid spam
+    if any(t['symbol'] == symbol and t['bot'] == bot_name for t in pending):
+        return
+
+    pending.append({
+        "bot": bot_name,
+        "symbol": symbol,
+        "qty": qty,
+        "side": side,
+        "reason": reason,
+        "timestamp": datetime.now().isoformat()
+    })
+    with open(PENDING_TRADES_FILE, "w") as f:
+        json.dump(pending, f)
+
 if __name__ == "__main__":
     log_message("Whale/Politician Tracker ONLINE. Monitoring Capitol Trades.")
     
@@ -73,22 +110,22 @@ if __name__ == "__main__":
         last_ticker = get_last_ticker()
         
         if current_ticker and current_ticker != last_ticker:
-            log_message(f"NEW WHALE TRADE DETECTED: {current_ticker}. Executing Market Buy.")
-            try:
-                # Execute Paper Trade
-                api.submit_order(
-                    symbol=current_ticker,
-                    qty=1,
-                    side='buy',
-                    type='market',
-                    time_in_force='gtc'
-                )
-                log_message(f"ORDER SUCCESS: Bought 1 share of {current_ticker}.")
+            mode = get_automation_mode()
+            reason = f"New whale disclosure for {current_ticker}"
+            
+            if mode == "Full Auto":
+                log_message(f"NEW WHALE TRADE DETECTED: {current_ticker}. Executing Market Buy (AUTO).")
+                try:
+                    api.submit_order(symbol=current_ticker, qty=1, side='buy', type='market', time_in_force='gtc')
+                    log_message(f"ORDER SUCCESS: Bought 1 share of {current_ticker}.")
+                    set_last_ticker(current_ticker)
+                except Exception as e:
+                    log_message(f"ORDER FAILED: {e}")
+            else:
+                log_message(f"STRATEGY TRIGGER: {current_ticker}. Queuing for Manual Approval.")
+                queue_trade("Politician Tracker", current_ticker, 1, "buy", reason)
                 set_last_ticker(current_ticker)
-            except Exception as e:
-                log_message(f"ORDER FAILED for {current_ticker}: {e}")
-                # Don't set last_ticker so we try again next cycle
         else:
             log_message("No new whale trades since last scan.")
             
-        time.sleep(900) # Scan every 15 minutes to avoid being blocked
+        time.sleep(900)

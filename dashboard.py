@@ -13,19 +13,10 @@ if "ALPACA_API_KEY" in st.secrets:
     BASE_URL = st.secrets.get("ALPACA_BASE_URL", "https://paper-api.alpaca.markets")
     GEMINI_API_KEY = st.secrets.get("GEMINI_API_KEY", None)
 else:
-    # Local fallback for your computer (using the hidden secrets file if it exists)
-    try:
-        # Streamlit reads from .streamlit/secrets.toml automatically if running via 'streamlit run'
-        # But we'll try to explicitly grab them for safety in some environments
-        API_KEY = st.secrets.get("ALPACA_API_KEY", "PKRPLQBGC5J3ALAUJ2CEXRF5WS")
-        SECRET_KEY = st.secrets.get("ALPACA_SECRET_KEY", "5nWMXqwxJyyknuaVsLEsiDdLKB9ue9HNz2cnLL5j11Qo")
-        BASE_URL = st.secrets.get("ALPACA_BASE_URL", "https://paper-api.alpaca.markets")
-        GEMINI_API_KEY = st.secrets.get("GEMINI_API_KEY", None)
-    except:
-        API_KEY = "PKRPLQBGC5J3ALAUJ2CEXRF5WS"
-        SECRET_KEY = "5nWMXqwxJyyknuaVsLEsiDdLKB9ue9HNz2cnLL5j11Qo"
-        BASE_URL = "https://paper-api.alpaca.markets"
-        GEMINI_API_KEY = None
+    API_KEY = st.secrets.get("ALPACA_API_KEY", "PKRPLQBGC5J3ALAUJ2CEXRF5WS")
+    SECRET_KEY = st.secrets.get("ALPACA_SECRET_KEY", "5nWMXqwxJyyknuaVsLEsiDdLKB9ue9HNz2cnLL5j11Qo")
+    BASE_URL = st.secrets.get("ALPACA_BASE_URL", "https://paper-api.alpaca.markets")
+    GEMINI_API_KEY = st.secrets.get("GEMINI_API_KEY", None)
 
 api = REST(API_KEY, SECRET_KEY, BASE_URL)
 SETTINGS_FILE = "settings.json"
@@ -45,39 +36,40 @@ def get_ai_advice(params):
     symbol = params['symbol']
     
     details = []
-    if 'limit_price' in params: details.append(f"at ${params['limit_price']}")
-    if 'stop_price' in params: details.append(f"triggered at ${params['stop_price']}")
-    if 'trail_percent' in params: details.append(f"trailing by {params['trail_percent']}%")
+    if 'limit_price' in params: details.append(f"at **${params['limit_price']}**")
+    if 'stop_price' in params: details.append(f"triggered at **${params['stop_price']}**")
+    if 'trail_percent' in params: details.append(f"trailing by **{params['trail_percent']}%**")
+    
     if params.get('order_class') == 'bracket':
-        details.append(f"with Profit Goal at ${params['take_profit']['limit_price']} and Emergency Stop at ${params['stop_loss']['stop_price']}")
+        tp = params['take_profit']['limit_price']
+        sl = params['stop_loss']['stop_price']
+        details.append(f"with Profit Goal at **${tp}** and Emergency Stop at **${sl}**")
+        
+        # Immediate logic check to help the user
+        if side == "BUY" and float(tp) <= float(sl):
+            return "❌ **ERROR**: For a BUY order, your 'Profit Goal' must be HIGHER than your 'Stop Loss'. Please adjust the numbers below."
+        if side == "SELL" and float(tp) >= float(sl):
+            return "❌ **ERROR**: For a SELL order, your 'Profit Goal' must be LOWER than your 'Stop Loss'. Please adjust the numbers below."
     
     detail_str = " ".join(details)
-
     advice = f"### 🛡️ Risk Analyst Report: {order_type} {side}\n\n"
     advice += f"Action: **{side} {qty} shares of {symbol}** {detail_str}.\n\n"
     
-    # Logic-based advice
     if params['type'] == "market":
-        advice += "**Risk**: You have no price control. In a volatile market, you might pay much more (or sell for much less) than the 'current' price you see.\n**Benefit**: Guaranteed immediate execution."
+        advice += "**Advice**: This executes immediately. You are at the mercy of the current market price."
     elif params['type'] == "limit":
-        advice += "**Risk**: If the price never hits your limit, the trade won't happen.\n**Benefit**: You have absolute price control. You'll never pay a penny more than your limit."
-    elif params['type'] == "stop":
-        advice += "**Risk**: Once triggered, it becomes a market order. If the stock is 'gapping' down, you could sell much lower than your trigger.\n**Benefit**: Automates an exit if a stock starts crashing."
-    elif params['type'] == "stop_limit":
-        advice += "**Risk**: High precision. If the stock skips over your narrow window, the trade won't fill.\n**Benefit**: Prevents the 'slippage' risk of a normal stop order."
-    elif params['type'] == "trailing_stop":
-        advice += "**Risk**: A temporary 'dip' might trigger a sell even if the stock is still in a long-term uptrend.\n**Benefit**: It locks in profits as the stock climbs without you having to watch it."
+        advice += "**Advice**: You've set a maximum price. The trade will only happen if the stock is at or below this value."
     elif params.get('order_class') == 'bracket':
-        advice += "**Risk**: Requires the price to hit one of your targets. Your money is 'locked' in this strategy until it finishes.\n**Benefit**: The Ultimate 'Set and Forget'. It automates your exit plan—both for making money (Profit) and protecting against loss (Stop) simultaneously."
+        advice += "**Advice**: This is a complete trade plan. It will automatically try to sell for a profit or exit for a small loss once the buy is finished."
 
     if GEMINI_API_KEY:
         try:
             url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
-            prompt = f"Act as a professional financial advisor. Analyze this specific trade: {side} {qty} {symbol} using a {order_type} order {detail_str}. List 2 pros and 2 cons in simple language."
+            prompt = f"Act as a professional financial advisor. Analyze this specific order: {side} {qty} {symbol} {order_type} {detail_str}. Briefly explain the strategy."
             resp = requests.post(url, json={"contents": [{"parts": [{"text": prompt}]}]})
             if resp.status_code == 200:
                 ai_text = resp.json()['candidates'][0]['content']['parts'][0]['text']
-                advice += f"\n\n---\n### ✨ Gemini Market Context\n{ai_text}"
+                advice += f"\n\n---\n### ✨ AI Context\n{ai_text}"
         except: pass
             
     return advice
@@ -87,34 +79,27 @@ st.set_page_config(page_title="Gemini Trading Mission Control", layout="wide")
 st.title("🚀 Gemini Trading Mission Control")
 st.markdown("---")
 
-# --- SIDEBAR: CONTROLS ---
+# --- SIDEBAR & TOP METRICS ---
 if not os.path.exists(SETTINGS_FILE):
-    with open(SETTINGS_FILE, "w") as f:
-        json.dump({"mode": "Full Auto", "trailing_stop_pct": 5.0, "whale_symbols": "NVDA,AAPL", "wheel_symbol": "TSLA"}, f)
+    with open(SETTINGS_FILE, "w") as f: json.dump({"mode": "Full Auto", "trailing_stop_pct": 5.0, "wheel_symbol": "TSLA"}, f)
 
-with open(SETTINGS_FILE, "r") as f:
-    settings = json.load(f)
+with open(SETTINGS_FILE, "r") as f: settings = json.load(f)
 
 st.sidebar.header("Bot Fleet Management")
-automation_mode = st.sidebar.radio("Bot Authority", ["Full Auto", "Manual Approval Required"], 
-                                   index=0 if settings["mode"] == "Full Auto" else 1)
-
+automation_mode = st.sidebar.radio("Bot Authority", ["Full Auto", "Manual Approval Required"], index=0 if settings["mode"] == "Full Auto" else 1)
 if automation_mode != settings["mode"]:
     settings["mode"] = automation_mode
     with open(SETTINGS_FILE, "w") as f: json.dump(settings, f)
 
 active_bot = st.sidebar.selectbox("Select Active Bot", ["Trailing Stop Bot v1", "Politician Tracker", "The Wheel (Income)"])
 
-# --- TOP LEVEL METRICS ---
 try:
     account = api.get_account()
-    col1, col2, col3 = st.columns(3)
-    col1.metric("Buying Power", f"${float(account.buying_power):,.2f}")
-    col2.metric("Portfolio Value", f"${float(account.portfolio_value):,.2f}")
-    col3.metric("Daily P/L", f"${float(account.equity) - float(account.last_equity):,.2f}")
-except:
-    st.error("Account Connection Offline. Did you add your Secrets to Streamlit Cloud Settings?")
-    st.info("💡 Go to Settings -> Secrets and paste the API keys provided by Desktop Commander.")
+    c1, c2, c3 = st.columns(3)
+    c1.metric("Buying Power", f"${float(account.buying_power):,.2f}")
+    c2.metric("Portfolio Value", f"${float(account.portfolio_value):,.2f}")
+    c3.metric("Daily P/L", f"${float(account.equity) - float(account.last_equity):,.2f}")
+except: st.error("Account Offline.")
 
 st.markdown("---")
 
@@ -122,25 +107,24 @@ st.markdown("---")
 st.header("🕹️ Pro Manual Terminal")
 
 if not st.session_state.order_review_mode:
+    # --- STEP 1: INPUT ---
     with st.form("pro_order_form"):
         r1c1, r1c2, r1c3, r1c4 = st.columns(4)
-        t_symbol = r1c1.text_input("Ticker Symbol", value="TSLA", help="e.g., TSLA, NVDA").upper()
+        t_symbol = r1c1.text_input("Ticker Symbol", value="TSLA").upper()
         t_qty = r1c2.number_input("Shares", min_value=1, value=1)
-        t_side = r1c3.selectbox("Action", ["buy", "sell"], help="Buy to enter, Sell to exit.")
-        t_type = r1c4.selectbox("Order Type", ["market", "limit", "stop", "stop_limit", "trailing_stop", "bracket"],
-                                help="Market = Now. Limit = Fixed Price. Stop = Trigger. Stop-Limit = Trigger to Fixed Price. Trailing = Follows the price. Bracket = Auto Profit + Auto Stop.")
+        t_side = r1c3.selectbox("Action", ["buy", "sell"])
+        t_type = r1c4.selectbox("Order Type", ["market", "limit", "stop", "stop_limit", "trailing_stop", "bracket"])
 
         r2c1, r2c2, r2c3, r2c4 = st.columns(4)
-        t_limit = r2c1.number_input("Limit Price ($)", min_value=0.01, step=0.01) if t_type in ["limit", "stop_limit", "bracket"] else None
-        t_stop = r2c2.number_input("Stop/Trigger Price ($)", min_value=0.01, step=0.01) if t_type in ["stop", "stop_limit"] else None
-        t_trail = r2c3.number_input("Trailing Percent (%)", min_value=0.1, max_value=25.0, value=5.0, step=0.1) if t_type == "trailing_stop" else None
+        t_limit = r2c1.number_input("Entry Price ($)", min_value=0.01, step=0.01, value=400.0) if t_type in ["limit", "stop_limit", "bracket"] else None
+        t_stop = r2c2.number_input("Trigger Price ($)", min_value=0.01, step=0.01, value=390.0) if t_type in ["stop", "stop_limit"] else None
+        t_trail = r2c3.number_input("Trailing %", min_value=0.1, max_value=25.0, value=5.0) if t_type == "trailing_stop" else None
         
-        # Bracket specific inputs
         t_tp = None
         t_sl = None
         if t_type == "bracket":
-            t_tp = r2c3.number_input("Take Profit Price ($)", min_value=0.01, step=0.01, help="If price hits this, sell for a win.")
-            t_sl = r2c4.number_input("Stop Loss Price ($)", min_value=0.01, step=0.01, help="If price hits this, sell to prevent further loss.")
+            t_tp = r2c3.number_input("Profit Target ($)", min_value=0.01, step=0.01, value=450.0)
+            t_sl = r2c4.number_input("Stop Loss ($)", min_value=0.01, step=0.01, value=380.0)
 
         if st.form_submit_button("🛡️ Review Order with AI Advisor"):
             params = {"symbol": t_symbol, "qty": t_qty, "side": t_side, "type": t_type if t_type != "bracket" else "limit"}
@@ -156,42 +140,62 @@ if not st.session_state.order_review_mode:
             st.session_state.order_review_mode = True
             st.rerun()
 else:
-    # --- AI REVIEW & CONFIRMATION ---
+    # --- STEP 2: REVIEW & QUICK ADJUST ---
     params = st.session_state.pending_order_params
-    st.warning("⚠️ **TRADE ON HOLD.** Review AI analysis before confirming.")
+    st.warning("⚠️ **TRADE ON HOLD.** Review and adjust parameters below.")
     
     with st.container(border=True):
         st.markdown(get_ai_advice(params))
-    
+
+    # --- QUICK ADJUSTMENT PANEL ---
+    with st.expander("🛠️ Adjust Order Parameters (Fix Errors Here)"):
+        adj_col1, adj_col2 = st.columns(2)
+        params['qty'] = adj_col1.number_input("Adjust Shares", min_value=1, value=int(params['qty']))
+        
+        if 'limit_price' in params:
+            params['limit_price'] = adj_col2.number_input("Adjust Entry Price ($)", value=float(params['limit_price']), step=0.01)
+        
+        if params.get('order_class') == 'bracket':
+            adj_col3, adj_col4 = st.columns(2)
+            params['take_profit']['limit_price'] = adj_col3.number_input("Adjust Profit Target ($)", value=float(params['take_profit']['limit_price']), step=0.01)
+            params['stop_loss']['stop_price'] = adj_col4.number_input("Adjust Stop Loss ($)", value=float(params['stop_loss']['stop_price']), step=0.01)
+            
+        st.session_state.pending_order_params = params
+
     btn_col1, btn_col2 = st.columns(2)
-    if btn_col1.button("🔥 Confirm & Execute Trade", type="primary", use_container_width=True):
+    
+    # Validation for the 'Execute' button
+    can_execute = True
+    if params.get('order_class') == 'bracket':
+        if params['side'] == 'buy' and params['take_profit']['limit_price'] <= params['stop_loss']['stop_price']:
+            can_execute = False
+    
+    if btn_col1.button("🔥 Confirm & Execute Trade", type="primary", use_container_width=True, disabled=not can_execute):
         try:
             api.submit_order(time_in_force='gtc', **params)
-            st.success("SUCCESS: Order sent to Alpaca.")
+            st.success("ORDER SENT!")
             st.session_state.order_review_mode = False
-            st.session_state.pending_order_params = None
             st.rerun()
         except Exception as e:
-            st.error(f"Execution Failed: {e}")
+            st.error(f"Execution Error: {e}")
             
-    if btn_col2.button("⬅️ Cancel / Go Back", use_container_width=True):
+    if btn_col2.button("⬅️ Cancel / Clear All", use_container_width=True):
         st.session_state.order_review_mode = False
         st.rerun()
 
 st.markdown("---")
-# --- BOTTOM INFO ---
-col_left, col_right = st.columns(2)
-with col_left:
+# --- PORTFOLIO & LOGS ---
+col_pos, col_log = st.columns([2, 1])
+with col_pos:
     st.subheader("📊 Active Positions")
     positions = api.list_positions()
     if positions:
-        df = pd.DataFrame([[p.symbol, p.qty, p.current_price, f"{float(p.unrealized_pl):.2f}"] for p in positions], 
-                          columns=['Symbol', 'Qty', 'Price', 'Unrealized P/L'])
-        st.dataframe(df, use_container_width=True)
+        st.dataframe(pd.DataFrame([[p.symbol, p.qty, p.current_price, f"{float(p.unrealized_pl):.2f}"] for p in positions], 
+                                 columns=['Symbol', 'Qty', 'Price', 'P/L']), use_container_width=True)
     else: st.info("No active trades.")
 
-with col_right:
-    st.subheader("🤖 Bot Activity (Last 5)")
+with col_log:
+    st.subheader("🤖 Bot Activity")
     tag_map = {"Trailing Stop Bot v1": "[TRAILING-STOP]", "Politician Tracker": "[POLITICIAN-TRACKER]", "The Wheel (Income)": "[THE-WHEEL]"}
     if os.path.exists(LOG_FILE):
         with open(LOG_FILE, "r") as f:

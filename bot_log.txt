@@ -35,3 +35,25 @@
 [2026-05-06 23:59:10] [POLITICIAN-TRACKER] Scanning... No new whale trades detected.
 [2026-05-06 23:59:12] [TRAILING-STOP] Price: $398.14 | Floor: $378.23
 [2026-05-07 00:00:12] [TRAILING-STOP] Price: $398.19 | Floor: $378.28
+[2026-05-07 00:00:55] [TRAILING-STOP] Bot started. Monitoring TSLA.
+[2026-05-07 00:00:55] [POLITICIAN-TRACKER] Whale/Politician Tracker ONLINE. Monitoring Capitol Trades.
+[2026-05-07 00:00:55] [POLITICIAN-TRACKER] Scraping latest Capitol Trades data...
+[2026-05-07 00:00:55] [THE-WHEEL] Wheel strategy active. Scanning for premiums...
+[2026-05-07 00:00:55] [TRAILING-STOP] Price: $398.19 | Floor: $378.28
+[2026-05-07 00:00:55] [POLITICIAN-TRACKER] NEW WHALE TRADE DETECTED: GS. Executing Market Buy (AUTO).
+[2026-05-07 00:00:56] [THE-WHEEL] Owned: 10 shares of TSLA. Strategy: Selling Covered Calls (Income).
+[2026-05-07 00:00:56] [THE-WHEEL] Optimal Strike for Friday: $418.10
+[2026-05-07 00:00:56] [POLITICIAN-TRACKER] ORDER SUCCESS: Bought 1 share of GS.
+[2026-05-07 00:00:56] [POLITICIAN-TRACKER] ORDER FAILED: [Errno 13] Permission denied: 'last_whale_ticker.txt'
+[2026-05-07 00:01:12] [TRAILING-STOP] Price: $398.15 | Floor: $378.24
+[2026-05-07 00:01:55] [TRAILING-STOP] Price: $398.16 | Floor: $378.25
+[2026-05-07 00:02:12] [TRAILING-STOP] Price: $398.16 | Floor: $378.25
+[2026-05-07 00:02:55] [TRAILING-STOP] Price: $398.17 | Floor: $378.26
+[2026-05-07 00:03:13] [TRAILING-STOP] Price: $398.16 | Floor: $378.25
+[2026-05-07 00:03:56] [TRAILING-STOP] Price: $398.16 | Floor: $378.25
+[2026-05-07 00:04:10] [POLITICIAN-TRACKER] Scanning whale flow for: NVDA, AAPL, MSFT, GOOGL
+[2026-05-07 00:04:10] [POLITICIAN-TRACKER] Scanning... No new whale trades detected.
+[2026-05-07 00:04:13] [TRAILING-STOP] Price: $398.11 | Floor: $378.20
+[2026-05-07 00:04:13] [THE-WHEEL] Owned: 10 shares of TSLA. Strategy: Selling Covered Calls (Income).
+[2026-05-07 00:04:13] [THE-WHEEL] Optimal Strike for Friday: $418.02
+[2026-05-07 00:04:56] [TRAILING-STOP] Price: $398.11 | Floor: $378.20

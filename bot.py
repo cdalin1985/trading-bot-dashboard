@@ -1,5 +1,6 @@
 ﻿import os
 import time
+import json
 from datetime import datetime
 from alpaca_trade_api.rest import REST
 
@@ -9,7 +10,16 @@ BASE_URL = "https://paper-api.alpaca.markets"
 
 api = REST(API_KEY, SECRET_KEY, BASE_URL)
 SYMBOL = "TSLA"
-STOP_LOSS_PCT = 0.05
+SETTINGS_FILE = "settings.json"
+
+def get_settings():
+    if os.path.exists(SETTINGS_FILE):
+        try:
+            with open(SETTINGS_FILE, "r") as f:
+                return json.load(f)
+        except:
+            pass
+    return {"trailing_stop_pct": 5.0}
 
 def log_message(message):
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -28,10 +38,13 @@ def run_bot():
     log_message("Bot started. Monitoring TSLA.")
     while True:
         try:
+            settings = get_settings()
+            stop_pct = settings.get("trailing_stop_pct", 5.0) / 100.0
+            
             position = api.get_position(SYMBOL)
             current_price = float(position.current_price)
-            stop_price = current_price * (1 - STOP_LOSS_PCT)
-            log_message(f"Price: ${current_price} | Floor: ${stop_price:.2f}")
+            stop_price = current_price * (1 - stop_pct)
+            log_message(f"Price: ${current_price} | Floor ({int(stop_pct*100)}%): ${stop_price:.2f}")
             time.sleep(60)
         except Exception as e:
             if "position does not exist" in str(e):
